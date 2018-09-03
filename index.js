@@ -23,6 +23,34 @@ var app = new Vue({
             }
         ]
     },
-    computed:{},
-    methods:{}
+    computed:{
+        totalPrice: function(){
+            var total = 0;
+            for(var i = 0; i< this.list.length; i++){
+                var item = this.list[i];
+                total += item.price * item.count;
+            }
+            return total
+        }
+    },
+    methods:{
+        // 减
+        _handleReduce:function(index){
+            // console.log('jian')
+            if(this.list[index].count === 1) return;
+            this.list[index].count --;
+        },
+        // 加
+        _handleAdd:function(index){
+            // console.log('jia')
+            this.list[index].count ++;
+        },
+        // 移除
+        _handleRemove:function(index){
+            
+            // console.log(index)
+            this.list.splice(index,1)
+        }
+
+    }
 })
