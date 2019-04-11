@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #app {
+            width:400px;
+            height:200px;
+            text-align: center;
+            line-height: 100px;
+            color:red;
+            background-color:black
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script>
+        // 使用防抖的时候要注意this指向
+        var count = 1;
+        var app = document.getElementById('app');
+        function getUserAction(){
+            console.log(this)
+            app.innerHTML = count++;
+        }
+        // f
+        app.onmousemove = debounce(getUserAction,1000, true);
+        // j
+        // app.onmousemove = throttle(getUserAction,1000);
+
+        // 防抖
+        function debounce(func,wait,flag){
+            var timeout;
+            return function(){
+                var _this = this;
+                clearTimeout(timeout);
+
+                if(flag){
+                    // 开始边界,进来就开始干
+                    var callNow = !timeout;// 假设页面刷新，第一次进来，timeout为假
+                    timeout = setTimeout(function(){
+                        timeout = null;
+                    },wait);
+                    if(callNow){
+                        func.apply(_this);
+                    }
+                }else{
+                    timeout = setTimeout(function(){
+                        func.apply(_this)
+                    },wait);
+                }
+                
+            }
+        }
+        // 可以控制边界（开始边界和结束边界）
+
+        // 节流
+        // function throttle(func,wait){
+        //     var prexious = 0; // 用做标记 == 相对运动同理
+
+        //     return  function(){
+        //         var _this = this;
+        //         var now = +new Date();// +new Date()将会调用Date原型上的valueOf方法 
+        //         // 获取1970年1月1日到现在的毫秒数 等同于getTime()方法
+        //         if(now - proxious > wait){
+        //             func.apply(_this);
+        //             proxious = now;
+        //         }
+        //     } 
+        // }
+    </script>
+</body>
+</html>

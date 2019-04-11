@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>VUE数据响应式原理实现</title>
+    <script>
+        // 第一步，实现基本架构
+        // 第二步，将模型的数据显示到视图
+        // 第三步，更新视图同步到模型，再更新视图
+        // 发布者
+        class Vue {
+            constructor(props){
+                this.props = props;
+                this.$data = props.data; // 获取数据
+                this.$el = document.querySelector(props.el);
+                this.subcriber = {}; // 存放订阅者  {mytext:[订阅者1，订阅者2],mymodel:[订阅者1]}
+                // 初始化
+                this.Observer(this.$data);
+                this.Compile(this.$el);
+            }
+            // 劫持数据
+            Observer(data){
+                console.log(data)
+                // 更新视图，局部更新
+                for(let key in data){
+                    this.subcriber[key] = [];
+                    let val = data[key]; // 当前的值
+                    let _this = this.subcriber[key];
+                    Object.defineProperty(this.$data,key,{
+                        get:function(){
+                            return val
+                        },
+                        set:function(newVal){
+                            if(val !== newVal){
+                                val = newVal;
+                                _this.forEach(Watch => { // 遍历订阅者的实例{mytext:[订阅者1，订阅者2],mymodel:[订阅者1]}
+                                    Watch.update() // 第三步中更新视图
+                                });
+                            }
+                        }
+                    })
+                }
+
+            }
+            // 解析指令
+            Compile(el){
+                let nodes = el.children; // 获取app下面的子元素
+                for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i]; // 当前元素
+                    if(node.children.length){ // 如果当前元素含有子元素，就自己调用自己（递归）
+                        this.Compile(node)
+                    }
+                    if(node.hasAttribute("v-model")){ // 查找v-model
+                        let attrVal = node.getAttribute("v-model");
+                        this.subcriber[attrVal].push(new Watcher(node,attrVal,this,"value"));// 获取属性里面的值，对号进入相对应的数组
+                        let _this = this;
+                        node.addEventListener("input",(function(){
+                            return function(){
+                                // console.log(node.value)
+                                // 更新视图同步到模型(//注意this的指向)
+                                _this.$data[attrVal] = node.value;
+                                // console.log(_this.$data[attrVal])
+                            }
+                        })())
+                    }
+                    if(node.hasAttribute("v-text")){
+                        let attrVal = node.getAttribute("v-text");
+                        this.subcriber[attrVal].push(new Watcher(node,attrVal,this,"innerHTML"));// 获取属性里面的值，对号进入相对应的数组
+                        console.log(2)
+                    }
+                    
+                }
+            }
+
+        }
+        // 订阅者
+        class Watcher {
+            constructor(el,vm,myself,attr){
+                this.el = el;
+                this.vm = vm;
+                this.myself = myself;
+                this.attr = attr;
+                this.update(); // 初始化
+            }
+            update(){
+                // div对象[innerHTML] = this.myself.$data[this.vm]
+                this.el[this.attr] = this.myself.$data[this.vm]
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="app">
+        <h1>数据双向绑定</h1>
+        <div>
+            <div v-text="myText"></div>
+            <input type="text" v-model = "myText">
+        </div>
+    </div>
+    
+    <script>
+        const app = new Vue({
+            el: "#app",
+            data:{
+                myText: "大吉大利，今晚吃鸡"
+            }
+        })
+    </script>
+</body>
+</html>
